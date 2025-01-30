@@ -1,6 +1,6 @@
 Flask==2.3.2
 transformers==4.36.2  # Updated version
-torch==2.0.1+cpu --index-url https://download.pytorch.org/whl/cpu
+torch==2.0.1 --index-url https://download.pytorch.org/whl/cpu
 gunicorn==20.1.0
 sounddevice==0.4.6
 numpy==1.26.4  # Stable pre-2.0 version
