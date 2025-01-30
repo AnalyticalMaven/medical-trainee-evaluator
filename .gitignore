@@ -7,3 +7,6 @@ __pycache__/
 *.wav
 .vscode/
 uploaded_audio.wav
+venv/Lib/site-packages/
+*.dll
+*.lib
