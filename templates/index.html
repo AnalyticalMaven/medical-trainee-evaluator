@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Medical Trainee Evaluator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>AI Medical Trainee Evaluator</h1>
+        <button id="startRecord">Start Recording</button>
+        <button id="stopRecord" disabled>Stop & Analyze</button>
+        <p id="status"></p>
+
+        <div id="result">
+            <h2>Results</h2>
+            <p><strong>Transcription:</strong> <span id="transcription" class="transcription"></span></p>
+            <p><strong>Empathy Score:</strong> <span id="empathy"></span></p>
+            <p><strong>Tone:</strong> <span id="tone"></span></p>
+            <p><strong>Context Score:</strong> <span id="context"></span></p>
+        </div>
+    </div>
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+
+        document.getElementById("startRecord").addEventListener("click", async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+                mediaRecorder.start();
+                
+                document.getElementById("startRecord").disabled = true;
+                document.getElementById("stopRecord").disabled = false;
+                document.getElementById("status").textContent = "Recording...";
+            } catch (err) {
+                alert("Error accessing microphone: " + err.message);
+            }
+        });
+
+        document.getElementById("stopRecord").addEventListener("click", () => {
+            mediaRecorder.stop();
+            document.getElementById("status").textContent = "Processing...";
+
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+                const formData = new FormData();
+                formData.append("audio", audioBlob, "recording.wav");
+
+                try {
+                    const response = await fetch("/analyze", { method: "POST", body: formData });
+                    const result = await response.json();
+
+                    document.getElementById("transcription").textContent = result.transcription;
+                    document.getElementById("empathy").textContent = result.evaluation.empathy;
+                    document.getElementById("tone").textContent = result.analysis.tone;
+                    document.getElementById("context").textContent = result.evaluation.context;
+
+                    document.getElementById("result").style.display = "block";
+                } catch (error) {
+                    alert("Analysis failed: " + error.message);
+                }
+
+                document.getElementById("startRecord").disabled = false;
+                document.getElementById("stopRecord").disabled = true;
+                document.getElementById("status").textContent = "";
+            };
+        });
+    </script>
+</body>
+</html>
